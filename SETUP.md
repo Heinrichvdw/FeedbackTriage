@@ -221,12 +221,6 @@ npm start
 
 ## Configuration Options
 
-### Database Options
-
-- Local PostgreSQL: fast development, requires local setup
-- Supabase: easy setup, free tier, cloud-hosted
-- Docker: `docker run -e POSTGRES_PASSWORD=mypass -p 5432:5432 postgres`
-
 ### AI Provider
 
 - OpenAI (recommended): GPT-3.5-turbo or newer
