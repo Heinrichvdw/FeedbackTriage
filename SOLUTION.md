@@ -348,13 +348,12 @@ Run `npm run migrate` (if added) or execute `lib/db.ts` initialization on first 
 
 ## Future Enhancements
 
-1. **Full-text Search**: Implement PostgreSQL text search or Elasticsearch
-2. **User Authentication**: Add user management and role-based access
-3. **Export Functionality**: CSV/JSON export of feedback
-4. **Analytics Dashboard**: Aggregate insights across feedback
-5. **Real-time Updates**: WebSocket integration for live updates
-6. **Feedback Replies**: Allow team to respond to feedback
-7. **Integration Webhooks**: Notify external systems of high-priority issues
+1. **User Authentication**: Add user management and role-based access
+2. **Export Functionality**: CSV/JSON export of feedback
+3. **Analytics Dashboard**: Aggregate insights across feedback
+4. **Real-time Updates**: WebSocket integration for live updates
+5. **Feedback Replies**: Allow team to respond to feedback
+6. **Integration Webhooks**: Notify external systems of high-priority issues
 
 ## Conclusion
 
