@@ -203,7 +203,3 @@ ISC
 For issues or questions, please open an issue on the repository.
 
 ---
-
-Changelog:
-
-- 2025-10-28: Clarified Windows/PowerShell instructions and updated setup/test guidance to match `SETUP.md`.
