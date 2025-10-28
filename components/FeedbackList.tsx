@@ -1,23 +1,26 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Feedback } from '@/lib/types';
-import Badge from './Badge';
-import FeedbackDetail from './FeedbackDetail';
+import { useState, useEffect, useRef } from "react";
+import { Feedback } from "@/lib/types";
+import Badge from "./Badge";
+import FeedbackDetail from "./FeedbackDetail";
 
 export default function FeedbackList() {
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
-  const [searchInput, setSearchInput] = useState<string>(''); // Immediate input value
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Debounced search query
-  const [sentimentFilter, setSentimentFilter] = useState<string>('');
-  const [tagFilter, setTagFilter] = useState<string>('');
+  const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(
+    null
+  );
+  const [searchInput, setSearchInput] = useState<string>(""); // Immediate input value
+  const [searchQuery, setSearchQuery] = useState<string>(""); // Debounced search query
+  const [sentimentFilter, setSentimentFilter] = useState<string>("");
+  const [tagInput, setTagInput] = useState<string>(""); // Immediate tag input value
+  const [tagQuery, setTagQuery] = useState<string>(""); // Debounced tag query
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-  const filtersRef = useRef({ searchQuery, sentimentFilter, tagFilter });
+  const filtersRef = useRef({ searchQuery, sentimentFilter, tagQuery });
 
   const fetchFeedback = async () => {
     setLoading(true);
@@ -30,26 +33,26 @@ export default function FeedbackList() {
       });
 
       if (searchQuery) {
-        params.append('search', searchQuery);
+        params.append("search", searchQuery);
       }
       if (sentimentFilter) {
-        params.append('sentiment', sentimentFilter);
+        params.append("sentiment", sentimentFilter);
       }
-      if (tagFilter) {
-        params.append('tag', tagFilter);
+      if (tagQuery) {
+        params.append("tag", tagQuery);
       }
 
       const response = await fetch(`/api/feedback?${params.toString()}`);
 
       if (!response.ok) {
-        throw new Error('Failed to fetch feedback');
+        throw new Error("Failed to fetch feedback");
       }
 
       const data = await response.json();
       setFeedback(data.data);
       setTotalPages(data.pagination.totalPages);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -64,19 +67,28 @@ export default function FeedbackList() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
+  // Debounce tag input with same delay as search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTagQuery(tagInput);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [tagInput]);
+
   // Reset page to 1 when any filter changes
   useEffect(() => {
-    const filtersChanged = 
+    const filtersChanged =
       filtersRef.current.searchQuery !== searchQuery ||
       filtersRef.current.sentimentFilter !== sentimentFilter ||
-      filtersRef.current.tagFilter !== tagFilter;
-    
+      filtersRef.current.tagQuery !== tagQuery;
+
     if (filtersChanged) {
       setPage(1);
     }
-    
-    filtersRef.current = { searchQuery, sentimentFilter, tagFilter };
-  }, [searchQuery, sentimentFilter, tagFilter]);
+
+    filtersRef.current = { searchQuery, sentimentFilter, tagQuery };
+  }, [searchQuery, sentimentFilter, tagQuery]);
 
   // Reset page to 1 when page size changes
   useEffect(() => {
@@ -87,17 +99,22 @@ export default function FeedbackList() {
   useEffect(() => {
     fetchFeedback();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, sentimentFilter, tagFilter, page, pageSize]);
+  }, [searchQuery, sentimentFilter, tagQuery, page, pageSize]);
 
   return (
     <div className="space-y-6">
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Filters</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+          Filters
+        </h2>
         <div className="space-y-4">
           {/* Search input - full width */}
           <div>
-            <label htmlFor="search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="search"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               Search
             </label>
             <input
@@ -118,7 +135,10 @@ export default function FeedbackList() {
           {/* Other filters in grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="sentiment" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="sentiment"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 Sentiment
               </label>
               <select
@@ -135,17 +155,25 @@ export default function FeedbackList() {
             </div>
 
             <div>
-              <label htmlFor="tag" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="tag"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 Tag
               </label>
               <input
                 type="text"
                 id="tag"
-                value={tagFilter}
-                onChange={(e) => setTagFilter(e.target.value)}
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
                 placeholder="Filter by tag..."
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
               />
+              {tagInput && tagInput !== tagQuery && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Waiting for you to finish typing...
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -192,12 +220,17 @@ export default function FeedbackList() {
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {feedback.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <tr
+                    key={item.id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-xs truncate">
                       {item.analysis.summary}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <Badge variant="sentiment">{item.analysis.sentiment}</Badge>
+                      <Badge variant="sentiment">
+                        {item.analysis.sentiment}
+                      </Badge>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <Badge variant="priority">{item.analysis.priority}</Badge>
@@ -208,7 +241,9 @@ export default function FeedbackList() {
                           <Badge key={idx}>{tag}</Badge>
                         ))}
                         {item.analysis.tags.length > 3 && (
-                          <span className="text-gray-500 dark:text-gray-400">+{item.analysis.tags.length - 3}</span>
+                          <span className="text-gray-500 dark:text-gray-400">
+                            +{item.analysis.tags.length - 3}
+                          </span>
                         )}
                       </div>
                     </td>
@@ -247,14 +282,17 @@ export default function FeedbackList() {
                 Next
               </button>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <span className="text-gray-700 dark:text-gray-300">
                 Page {page} of {totalPages}
               </span>
-              
+
               <div className="flex items-center gap-2">
-                <label htmlFor="pageSize" className="text-sm text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="pageSize"
+                  className="text-sm text-gray-700 dark:text-gray-300"
+                >
                   Items per page:
                 </label>
                 <select
@@ -285,4 +323,3 @@ export default function FeedbackList() {
     </div>
   );
 }
-
