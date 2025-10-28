@@ -5,32 +5,37 @@
 This application is a full-stack Next.js application that provides AI-powered feedback triage capabilities. The architecture demonstrates clear separation of concerns across three main layers:
 
 ### 1. **Data Access Layer**
+
 - **Location**: `lib/db.ts`, PostgreSQL database
 - **Responsibility**: Database connection management, schema initialization, and query execution
-- **Model**: 
+- **Model**:
   - Core fields: `id`, `text`, `email`, `created_at`
   - Analysis JSONB field storing AI-generated structured data
 
 ### 2. **Business Logic Layer**
+
 - **Location**: `app/api/feedback/`, `lib/ai-service.ts`
-- **Responsibility**: 
+- **Responsibility**:
   - REST API endpoints for CRUD operations
   - AI analysis integration using OpenAI
   - Request validation and error handling
   - Middleware for logging and correlation IDs
 
 ### 3. **Presentation Layer**
+
 - **Location**: `app/`, `components/`
-- **Responsibility**: 
+- **Responsibility**:
   - User interface for submitting and viewing feedback
   - Reusable components (Badge, FeedbackList, etc.)
   - State management using React hooks
   - Client-side filtering and pagination
+  - Implemented full text search on the feedback history page, trade offs being constant connections to the database while typing and full text search normally being a slow and more compute heavy task, this was compensated for by adding a delay while typing to only start the search when the user has finished typing.
 
 ## Technology Stack
 
 ### Framework: Next.js 14
-- **Rationale**: 
+
+- **Rationale**:
   - Built-in API routes for backend functionality
   - Server-side rendering and static generation capabilities
   - Excellent TypeScript support
@@ -38,7 +43,8 @@ This application is a full-stack Next.js application that provides AI-powered fe
   - Production-ready with built-in optimizations
 
 ### Database: PostgreSQL
-- **Rationale**: 
+
+- **Rationale**:
   - Chosen for relational data model with structured feedback records
   - JSONB support for flexible AI analysis storage
   - ACID compliance ensures data integrity
@@ -46,14 +52,16 @@ This application is a full-stack Next.js application that provides AI-powered fe
   - Strong ecosystem and tooling support
 
 ### AI Provider: OpenAI
-- **Rationale**: 
+
+- **Rationale**:
   - Mature API with reliable JSON output
   - Cost-effective (using gpt-3.5-turbo)
   - Good prompt engineering capabilities
   - Alternative was Anthropic, but OpenAI has broader adoption and simpler integration
 
 ### Language: TypeScript
-- **Rationale**: 
+
+- **Rationale**:
   - Strong type safety reduces runtime errors
   - Better IDE support and developer experience
   - Self-documenting code through types
@@ -80,12 +88,14 @@ CREATE TABLE feedback (
 **Chosen: PostgreSQL (Relational)**
 
 **Rationale**:
+
 1. **Structured Core Data**: Feedback entries have a consistent schema (text, email, created_at)
 2. **JSONB for Flexibility**: PostgreSQL's JSONB type provides flexibility for AI analysis while maintaining query capabilities
 3. **Query Performance**: Need for server-side filtering (sentiment, tags) benefits from relational indices
 4. **Transaction Safety**: ACID properties ensure data consistency
 
 **Trade-offs**:
+
 - Could have used MongoDB for more flexible schema, but would lose query capabilities
 - Could have normalized analysis into separate tables, but JSONB provides better performance for read-heavy workloads
 - Future extensibility maintained through JSONB for new analysis fields
@@ -95,6 +105,7 @@ CREATE TABLE feedback (
 **Chosen: JSONB in PostgreSQL**
 
 **Fields**:
+
 - `summary` (string): Brief one-sentence summary
 - `sentiment` (enum): positive, neutral, negative
 - `tags` (array): 1-5 short nouns
@@ -102,6 +113,7 @@ CREATE TABLE feedback (
 - `nextAction` (string): Recommended action
 
 **Rationale**:
+
 - Single query retrieval of complete feedback record
 - GIN index enables efficient filtering by sentiment and tags
 - Flexible schema accommodates future AI enhancements
@@ -114,6 +126,7 @@ CREATE TABLE feedback (
 ### Prompt Engineering
 
 The prompt is designed to:
+
 1. **Return Strict JSON**: System message instructs model to return only valid JSON
 2. **Consistent Structure**: Clear field definitions ensure predictable output
 3. **Contextual Guidelines**: Priority guidelines help the model make consistent decisions
@@ -132,18 +145,21 @@ The prompt is designed to:
 **Implemented: Caching**
 
 **Why Caching?**
+
 - Reduces API costs significantly (repeated feedback patterns)
 - Improves response time for similar feedback
 - Simpler to implement than retry logic
 - Deterministic cache key (MD5 hash of text)
 
 **How it works**:
+
 - In-memory cache with text hash as key
 - Cache persists for session lifetime
 - Cache hit logged for monitoring
 - Future: Could implement Redis for distributed cache
 
 **Alternative (not implemented): Retries with Backoff**
+
 - Would handle transient API failures better
 - More complex error handling logic
 - Better for high-reliability scenarios
@@ -155,6 +171,7 @@ The prompt is designed to:
 **Production Recommendation**: Async background job processing
 
 **Architecture**:
+
 1. POST /api/feedback returns immediately with status "pending"
 2. Background worker (e.g., Bull queue) processes analysis
 3. WebSocket/SSE push update when analysis completes
@@ -169,13 +186,15 @@ The prompt is designed to:
 ### Endpoints
 
 #### POST /api/feedback
+
 - **Input**: `{ text: string, email?: string }`
 - **Output**: Complete feedback record with AI analysis
 - **Validation**: Zod schema validation
 - **Errors**: 400 for invalid input, 500 for server errors
 
 #### GET /api/feedback
-- **Query Parameters**: 
+
+- **Query Parameters**:
   - `sentiment`: Filter by sentiment
   - `tag`: Filter by tag
   - `page`: Pagination page (default: 1)
@@ -184,6 +203,7 @@ The prompt is designed to:
 - **Filtering**: SQL WHERE clauses on JSONB fields
 
 #### GET /api/feedback/:id
+
 - **Output**: Single feedback record
 - **Errors**: 404 if not found
 
@@ -198,6 +218,7 @@ The prompt is designed to:
 ### Reusable Components
 
 **Badge Component** (`components/Badge.tsx`)
+
 - Used for sentiments, priorities, and tags
 - Color-coded variants based on semantic meaning
 - Demonstrates component reusability and DRY principles
@@ -213,6 +234,7 @@ The prompt is designed to:
 ### Unit Tests
 
 **Backend Tests** (`__tests__/`)
+
 1. **AI Service Tests** (`ai-service.test.ts`)
    - Mock mode testing for deterministic outputs
    - Cache behavior verification
@@ -224,6 +246,7 @@ The prompt is designed to:
    - Error handling
 
 **Frontend Tests** (`Badge.test.tsx`)
+
 - Component rendering
 - Variant rendering
 - Custom styling
@@ -239,17 +262,20 @@ The prompt is designed to:
 ### AI Rate Limit or Timeout Errors
 
 **Symptoms**:
+
 - High error rate from AI service
 - Requests timing out
 - API returning 500 errors
 
 **Debugging Steps**:
+
 1. Check logs for `[requestId]` to trace failed requests
 2. Look for OpenAI API error messages in structured logs
 3. Monitor request rate and compare against API limits
 4. Check cache hit rate - low cache hits may indicate unique feedback patterns
 
 **Resolution**:
+
 - Implement exponential backoff retry logic
 - Add request queuing for rate limit compliance
 - Consider moving to async processing with background workers
@@ -258,17 +284,20 @@ The prompt is designed to:
 ### Database Connection Exhaustion or Connectivity Issues
 
 **Symptoms**:
+
 - Database query timeouts
 - Connection pool errors
 - Slow API responses
 
 **Debugging Steps**:
+
 1. Check PostgreSQL logs for connection errors
 2. Monitor connection pool metrics (active, idle connections)
 3. Verify database is accessible (network, credentials)
 4. Review slow query logs for inefficient queries
 
 **Resolution**:
+
 - Increase connection pool size in `lib/db.ts`
 - Add connection pooling middleware (PgBouncer)
 - Optimize slow queries (check indexes are being used)
@@ -279,14 +308,17 @@ The prompt is designed to:
 ### General Troubleshooting
 
 **Request Correlation**:
+
 - All logs include `[requestId]` for tracing requests across layers
 - Check logs for timing information to identify slow operations
 
 **Structured Logging**:
+
 - Timestamp, request ID, method, path, status, duration
 - Avoid logging sensitive data (PII, full prompts)
 
 **Health Checks**:
+
 - Monitor: `/api/health` endpoint (if added)
 - Database connection health
 - AI service availability
@@ -297,6 +329,7 @@ The prompt is designed to:
 ### Environment Variables
 
 See `.env.example` for required configuration:
+
 - `DATABASE_URL`: PostgreSQL connection string
 - `OPENAI_API_KEY`: OpenAI API authentication
 - `PORT`: Server port (default: 3000)
@@ -326,6 +359,7 @@ Run `npm run migrate` (if added) or execute `lib/db.ts` initialization on first 
 ## Conclusion
 
 This application demonstrates production-ready patterns:
+
 - Clear separation of concerns
 - Type-safe development with TypeScript
 - Comprehensive error handling
@@ -335,4 +369,3 @@ This application demonstrates production-ready patterns:
 - Production-grade logging and monitoring
 
 The modular design allows for independent evolution of each layer without affecting others, making it maintainable and extensible for future requirements.
-

@@ -72,13 +72,17 @@ export class AIService {
       throw new Error('OpenAI client not initialized');
     }
 
-    const prompt = `You are a product feedback analyst. Analyze the following feedback and return ONLY a valid JSON object with these exact fields:
+    const prompt = `You are a **product feedback analyst**. Your sole function is to analyze the following feedback, focusing only on the product and user experience.
+
+**CRITICAL INSTRUCTION: Redact or anonymize all Personally Identifiable Information (PII)**—such as names, email addresses, phone numbers, location data, or account numbers—from the feedback before generating any output. The analysis should be about the **issue or feature**, not the individual user.
+
+Analyze the following feedback and return **ONLY** a valid JSON object with these exact fields:
 {
-  "summary": "A brief one-sentence summary of the feedback",
+  "summary": "A brief one-sentence summary of the **core issue or request** from the feedback",
   "sentiment": "positive|neutral|negative",
   "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "priority": "P0|P1|P2|P3",
-  "nextAction": "A recommended next action"
+  "nextAction": "A recommended next action, ensuring all PII is scrubbed or generalized"
 }
 
 Priority guidelines:
@@ -102,6 +106,28 @@ Return ONLY the JSON object, no additional text.`;
       temperature: 0.3,
       max_tokens: 300,
     });
+
+    // Log any available metadata from the OpenAI response (avoid logging user content)
+    try {
+      const metadata = {
+        id: (response as any).id,
+        model: (response as any).model,
+        object: (response as any).object,
+        created: (response as any).created,
+        usage: (response as any).usage,
+        choices: (response as any).choices?.map((c: any) => ({
+          index: c.index,
+          finish_reason: c.finish_reason,
+          // log message role but not the content to avoid duplicating the response body
+          message_role: c.message?.role
+        })),
+        // include any vendor-specific metadata field if present
+        metadata: (response as any).metadata
+      };
+      console.log('ℹ️ OpenAI response metadata:', metadata);
+    } catch (logErr) {
+      console.warn('Unable to log OpenAI metadata:', logErr);
+    }
 
     const content = response.choices[0]?.message?.content;
     if (!content) {

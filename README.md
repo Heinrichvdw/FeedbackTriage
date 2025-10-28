@@ -17,7 +17,7 @@ AI-powered feedback management system built with Next.js, TypeScript, PostgreSQL
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
 - **Database**: PostgreSQL
-- **AI**: OpenAI GPT-3.5 Turbo
+- **AI**: OpenAI GPT-3.5 Turbo (or mock mode)
 - **Styling**: Tailwind CSS
 - **Testing**: Jest, React Testing Library
 
@@ -25,46 +25,52 @@ AI-powered feedback management system built with Next.js, TypeScript, PostgreSQL
 
 - Node.js 18+ and npm
 - PostgreSQL database
-- OpenAI API key (optional - includes mock mode)
+- OpenAI API key (optional — mock mode available)
 
 ## Setup
 
 1. **Install dependencies**:
-   ```bash
+
+   ```powershell
    npm install
    ```
 
 2. **Configure environment**:
-   
+
    **Windows PowerShell:**
+
    ```powershell
    Copy-Item .env.example .env
    ```
-   
-   **Linux/Mac:**
+
+   **Linux / macOS:**
+
    ```bash
    cp .env.example .env
    ```
-   
-   Or create the file manually if needed. Then edit `.env` and set:
+
+   Then edit `.env` and set:
+
    - `DATABASE_URL`: Your PostgreSQL connection string
-   - `OPENAI_API_KEY`: Your OpenAI API key (or leave as is for mock mode)
+   - `OPENAI_API_KEY`: Your OpenAI API key (or leave empty for mock mode)
    - `PORT`: Server port (default: 3000)
 
 3. **Initialize database**:
-   ```bash
+
+   ```powershell
    npm run db:init
    ```
-   
+
    This will create the necessary tables and indexes in your PostgreSQL database.
 
 4. **Start development server**:
-   ```bash
+
+   ```powershell
    npm run dev
    ```
 
 5. **Open your browser**:
-   Navigate to [http://localhost:3000](http://localhost:3000)
+   Navigate to http://localhost:3000 (or the port set in `PORT`).
 
 ## Usage
 
@@ -85,16 +91,18 @@ AI-powered feedback management system built with Next.js, TypeScript, PostgreSQL
 
 ## Running Tests
 
-```bash
+```powershell
 # Run all tests
 npm test
 
-# Run tests in watch mode
+# Run tests in watch mode (if configured)
 npm run test:watch
 
-# Run tests with coverage (coming soon)
+# Run tests with coverage (if supported)
 npm test -- --coverage
 ```
+
+Note: The project uses Jest (see `jest.config.js`). If tests rely on a DB connection, ensure `.env` and the DB are available or run tests using the project's mock configuration.
 
 ## Project Structure
 
@@ -107,19 +115,9 @@ npm test -- --coverage
 │   ├── page.tsx           # Home page
 │   └── globals.css        # Global styles
 ├── components/             # React components
-│   ├── Badge.tsx          # Reusable badge component
-│   ├── FeedbackDetail.tsx # Feedback detail modal
-│   ├── FeedbackList.tsx   # Feedback list with filters
-│   └── SubmitFeedback.tsx # Feedback submission form
 ├── lib/                   # Shared utilities
-│   ├── ai-service.ts      # AI analysis service
-│   ├── db.ts              # Database connection and queries
-│   └── types.ts           # TypeScript type definitions
 ├── __tests__/             # Test files
-│   ├── ai-service.test.ts # AI service tests
-│   ├── api.feedback.test.ts # API route tests
-│   └── Badge.test.tsx     # Component tests
-├── SOLUTION.md            # Architecture and design documentation
+├── scripts/               # Utility scripts (db init/create)
 └── README.md              # This file
 ```
 
@@ -131,7 +129,7 @@ The application follows a three-tier architecture:
 2. **Business Layer**: Next.js API routes handling CRUD operations and AI integration
 3. **Presentation Layer**: React components for user interaction
 
-See [SOLUTION.md](./SOLUTION.md) for detailed architecture documentation.
+See `SOLUTION.md` for detailed architecture documentation.
 
 ## Development
 
@@ -148,7 +146,7 @@ NODE_ENV=development
 
 ### Mock Mode
 
-If you don't have an OpenAI API key, the application will run in mock mode, providing deterministic analysis outputs based on the feedback text.
+If you don't have an OpenAI API key, the application will run in mock mode, providing deterministic analysis outputs based on the feedback text. This is useful for local development and CI tests.
 
 ### Database Schema
 
@@ -166,7 +164,7 @@ CREATE TABLE feedback (
 
 1. Set up PostgreSQL database (e.g., AWS RDS, Supabase, etc.)
 2. Configure environment variables
-3. Run database migrations
+3. Run database migrations / `npm run db:init`
 4. Build the application: `npm run build`
 5. Start the production server: `npm start`
 
@@ -204,3 +202,8 @@ ISC
 
 For issues or questions, please open an issue on the repository.
 
+---
+
+Changelog:
+
+- 2025-10-28: Clarified Windows/PowerShell instructions and updated setup/test guidance to match `SETUP.md`.
