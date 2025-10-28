@@ -245,7 +245,3 @@ npm start
 - Open an issue for bugs or questions
 
 ---
-
-Changelog:
-
-- 2025-10-28: Clarified Windows/PowerShell instructions, added changelog line and minor wording updates.
